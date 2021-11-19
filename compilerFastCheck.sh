@@ -70,11 +70,9 @@
 #
 #Set COMPILERNAME to the name of your compiler program executable.
 #
-#Examples:
-#COMPILERNAME=./stage0
+COMPILERNAME=./stage0
 #COMPILERNAME=./stage1
 #COMPILERNAME=./stage2
-COMPILERNAME=./stage0
 #
 #Set the ASM_NAME_STRING to contain the same string as your list of
 #names of people who worked on your compiler. For example, if your 
@@ -96,7 +94,7 @@ COMPILERNAME=./stage0
 ASM_NAME_STRING=""
 #
 #Lines in your generated .asm files containing this text will 
-#not be cause color changes in the output chart at the end.
+#not cause color changes in the output chart at the end.
 #
 #This prevents a diff that shows a difference like so:
 #1c1
