@@ -1,11 +1,22 @@
 #!/usr/bin/bash
 
-#Useful in getting multiple lines of input in a text file into an Irvine32 based
-#executable. My impression is that Irvine32 libraries were designed with
-#old-school Windows/DOS in mind, where they didn't have the concept of piping
-#contents of a text file to an executable. (Recent versions do, but versions 
-#that the Irvine32 libraries were built for do not.) Irvine32 takes a ton of
-#input, then trashes anything after the first line-feed character. 
+#Make sure this script is set to be executable.
+#Running... 
+#chmod 755 <this script's name>
+#would work.
+
+#Then simply type the name of this script, followed by the executable you
+#are testing, and the input file you're feeding it. 
+
+#Piping out output is supported.
+
+#This script is useful in getting multiple lines of input in a text file into
+#an Irvine32 based executable. My impression is that Irvine32 libraries were 
+#designed with old-school Windows/DOS in mind, where they didn't have the 
+#concept of piping contents of a text file to an executable. (Recent versions
+#do, but versions that the Irvine32 libraries were built for do not.) Irvine32
+#takes a ton of input, then trashes anything after the first line-feed
+#character. 
 
 #The angelo.edu Among32 port for the Linux box ported over this exact same 
 #limitation to the Linux implementation. This prevents the piping-in of text
