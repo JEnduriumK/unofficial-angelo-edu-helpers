@@ -60,12 +60,12 @@ wait
 ("./""$THE_EXECUTABLE" < "./""$THIS_MAGICAL_PIPE") &
 #Spin up a subshell! Credit: https://github.com/mloftis
 (
-while IFS="" read -r THE_LINE || [ -n "$THE_LINE" ]
-do
-	echo "$THE_LINE"
-	sleep 0.01
-done < "$THE_TEXT" #THE INPUT FILE CAME FROM... BEHIND!
-#Essentially: ( echo LINE1; sleep 0.01; echo LINE2; sleep 0.01; echo LINE3; sleep 0.01 ) > $THIS_MAGICAL_PIPE
+	while IFS="" read -r THE_LINE || [ -n "$THE_LINE" ]
+	do
+		echo "$THE_LINE"
+		sleep 0.01
+	done < "$THE_TEXT" #THE INPUT FILE CAME FROM... BEHIND!
+	#Essentially: ( echo LINE1; sleep 0.01; echo LINE2; sleep 0.01; echo LINE3; sleep 0.01 ) > $THIS_MAGICAL_PIPE
 ) > "./""$THIS_MAGICAL_PIPE"
 #wait until we're done with the pipe to delete it.
 wait
