@@ -48,7 +48,7 @@ THE_TEXT=""
 [[ $(file -bip $1 | grep -c text) -gt 0 ]] && { THE_TEXT=$1; }
 [[ $(file -bip $2 | grep -c text) -gt 0 ]] && { THE_TEXT=$2; }
 #I don't have one of each, abort!
-[[ -z "$THE_EXECUTABLE" || -z "$THE_TEXT" ]] && { echo "USAGE: $0 <executable> <input text>"; echo "OR     $0 <input text> <executable>"; exit; }
+[[ -z "$THE_EXECUTABLE" || -z "$THE_TEXT" ]] && { echo "We weren't given one text file and one executable."; echo "USAGE: $0 <executable> <input text>"; echo "OR     $0 <input text> <executable>"; exit; }
 
 #Otherwise...
 #Prepare a FIFO pipe.
