@@ -1,14 +1,27 @@
 #!/usr/bin/bash
 
-#Useful in getting multiple lines of input in a text file into an Irvine32 based
-#executable. My impression is that Irvine32 libraries were designed with
-#old-school Windows/DOS in mind, where they didn't have the concept of piping
-#contents of a text file to an executable. (Recent versions do, but versions 
-#that the Irvine32 libraries were built for do not.) Irvine32 takes a ton of
-#input, then trashes anything after the first line-feed character. 
+#Make sure this script is set to be executable.
+#Running... 
+#chmod 755 <this script's name>
+#would work.
+
+#Then simply type the name of this script, followed by the executable you
+#are testing, and the input file you're feeding it. 
+
+#Piping out output is supported.
+
+#This script is useful in getting multiple lines of input in a text file into
+#an Irvine32 based executable. My impression is that Irvine32 libraries were 
+#designed with old-school Windows/DOS in mind, where they didn't have the 
+#concept of piping contents of a text file to an executable. (Recent versions
+#do, but versions that the Irvine32 libraries were built for do not.) Irvine32
+#takes a ton of input, then trashes anything after the first line-feed
+#character. 
 
 #The angelo.edu Among32 port for the Linux box ported over this exact same 
-#limitation to the Linux implementation. This script works around the issue.
+#limitation to the Linux implementation. This prevents the piping-in of text
+#files to the executables to be evaluated as input. This script works around
+#the issue.
 
 #Script inexpertly cobbled together by (and idea for FIFO pipe): Joel King. 
 #Credit for the idea of using a subshell to pipe
@@ -35,7 +48,7 @@ THE_TEXT=""
 [[ $(file -bip $1 | grep -c text) -gt 0 ]] && { THE_TEXT=$1; }
 [[ $(file -bip $2 | grep -c text) -gt 0 ]] && { THE_TEXT=$2; }
 #I don't have one of each, abort!
-[[ -z "$THE_EXECUTABLE" || -z "$THE_TEXT" ]] && { echo "USAGE: $0 <executable> <input text>"; echo "OR     $0 <input text> <executable>"; exit; }
+[[ -z "$THE_EXECUTABLE" || -z "$THE_TEXT" ]] && { echo "We weren't given one text file and one executable."; echo "USAGE: $0 <executable> <input text>"; echo "OR     $0 <input text> <executable>"; exit; }
 
 #Otherwise...
 #Prepare a FIFO pipe.
@@ -47,12 +60,12 @@ wait
 ("./""$THE_EXECUTABLE" < "./""$THIS_MAGICAL_PIPE") &
 #Spin up a subshell! Credit: https://github.com/mloftis
 (
-while IFS="" read -r THE_LINE || [ -n "$THE_LINE" ]
-do
-	echo "$THE_LINE"
-	sleep 0.01
-done < "$THE_TEXT" #THE INPUT FILE CAME FROM... BEHIND!
-#Essentially: ( echo LINE1; sleep 0.01; echo LINE2; sleep 0.01; echo LINE3; sleep 0.01 ) > $THIS_MAGICAL_PIPE
+	while IFS="" read -r THE_LINE || [ -n "$THE_LINE" ]
+	do
+		echo "$THE_LINE"
+		sleep 0.01
+	done < "$THE_TEXT" #THE INPUT FILE CAME FROM... BEHIND!
+	#Essentially: ( echo LINE1; sleep 0.01; echo LINE2; sleep 0.01; echo LINE3; sleep 0.01 ) > $THIS_MAGICAL_PIPE
 ) > "./""$THIS_MAGICAL_PIPE"
 #wait until we're done with the pipe to delete it.
 wait
