@@ -8,7 +8,9 @@
 #input, then trashes anything after the first line-feed character. 
 
 #The angelo.edu Among32 port for the Linux box ported over this exact same 
-#limitation to the Linux implementation. This script works around the issue.
+#limitation to the Linux implementation. This prevents the piping-in of text
+#files to the executables to be evaluated as input. This script works around
+#the issue.
 
 #Script inexpertly cobbled together by (and idea for FIFO pipe): Joel King. 
 #Credit for the idea of using a subshell to pipe
