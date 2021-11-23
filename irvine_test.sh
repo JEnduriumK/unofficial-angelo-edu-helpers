@@ -52,7 +52,7 @@ THE_TEXT=""
 
 #Otherwise...
 #Prepare a FIFO pipe.
-THIS_MAGICAL_PIPE=$(basename $THE_EXECUTABLE)".fifo_pipe"
+THIS_MAGICAL_PIPE="$THE_TEXT""_TO_"$(basename $THE_EXECUTABLE)".fifo_pipe"
 mkfifo "$THIS_MAGICAL_PIPE"
 #Make sure it gets made before doing this next part...
 wait
