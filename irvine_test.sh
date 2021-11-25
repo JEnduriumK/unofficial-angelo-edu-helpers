@@ -39,7 +39,7 @@
 
 #Changelog
 #v4 Hah! Sleep 0 works just as well as sleep 0.1.
-#v3 Apparently I had a wait after mkfifo that wasn't needed. 
+#v3 Apparently I had a wait after mkfifo that wasn't needed? 
 #v2 Temp files are a thing in /tmp! Wow, who knew? Also, trap is a thing for ensured cleanup? Nice. 
 #v1 Rudimentary first attempt with ""temp"" files in the same directory as the script, and an 0.1 wait.
 
@@ -81,5 +81,5 @@ mkfifo "$THIS_MAGICAL_PIPE"
 	done < "$THE_TEXT" #THE INPUT FILE CAME FROM... BEHIND!
 	#Essentially: ( echo LINE1; sleep 0.01; echo LINE2; sleep 0.01; echo LINE3; sleep 0.01 ) > $THIS_MAGICAL_PIPE
 ) > "$THIS_MAGICAL_PIPE"
-#wait until we're done with the pipe to delete it.
+#wait until we're done with the pipe to exit, because exiting will delete it.
 wait
