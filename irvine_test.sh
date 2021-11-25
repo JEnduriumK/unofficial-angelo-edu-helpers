@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 #Make sure this script is set to be executable.
 #Running... 
@@ -33,9 +33,20 @@
 #https://stackoverflow.com/questions/965053/extract-filename-and-extension-in-bash
 #https://linuxize.com/post/basename-command-in-linux/
 #https://stackoverflow.com/questions/1521462/looping-through-the-content-of-a-file-in-bash
+#https://www.linuxjournal.com/content/bash-trap-command
+#Credit also to https://github.com/mloftis for pointing out trap and mktemp after I showed him the first version of this script.
+#And also using "#!/usr/bin/env bash" rather than "#!/usr/bin/bash"
+
+function cleanup()
+{
+	[[ -n $THE_TEMP_DIRECTORY ]] && rm -r $THE_TEMP_DIRECTORY;
+}
 
 THE_EXECUTABLE=""
 THE_TEXT=""
+THE_TEMP_DIRECTORY=$(mktemp -d)
+trap cleanup EXIT
+trap cleanup SIGINT
 
 #Did you hand us two arguments?
 [[ $# -eq 2 ]] || { echo "USAGE: $0 <executable> <input text>"; echo "OR     $0 <input text> <executable>"; exit; }
@@ -52,12 +63,12 @@ THE_TEXT=""
 
 #Otherwise...
 #Prepare a FIFO pipe.
-THIS_MAGICAL_PIPE="$THE_TEXT""_TO_"$(basename $THE_EXECUTABLE)".fifo_pipe"
+THIS_MAGICAL_PIPE=$(mktemp -u "$THE_TEMP_DIRECTORY""/""$THE_TEXT""_TO_"$(basename $THE_EXECUTABLE)".fifo_pipe"".XXXXXXXX")
 mkfifo "$THIS_MAGICAL_PIPE"
 #Make sure it gets made before doing this next part...
 wait
 #Start piping the contents of that pipe in to the executable in the background. 
-("./""$THE_EXECUTABLE" < "./""$THIS_MAGICAL_PIPE") &
+("./""$THE_EXECUTABLE" < "$THIS_MAGICAL_PIPE") &
 #Spin up a subshell! Credit: https://github.com/mloftis
 (
 	while IFS="" read -r THE_LINE || [ -n "$THE_LINE" ]
@@ -66,7 +77,6 @@ wait
 		sleep 0.01
 	done < "$THE_TEXT" #THE INPUT FILE CAME FROM... BEHIND!
 	#Essentially: ( echo LINE1; sleep 0.01; echo LINE2; sleep 0.01; echo LINE3; sleep 0.01 ) > $THIS_MAGICAL_PIPE
-) > "./""$THIS_MAGICAL_PIPE"
+) > "$THIS_MAGICAL_PIPE"
 #wait until we're done with the pipe to delete it.
 wait
-rm "$THIS_MAGICAL_PIPE"
