@@ -37,6 +37,12 @@
 #Credit also to https://github.com/mloftis for pointing out trap and mktemp after I showed him the first version of this script.
 #And also using "#!/usr/bin/env bash" rather than "#!/usr/bin/bash"
 
+#Changelog
+#v4 Hah! Sleep 0 works just as well as sleep 0.1.
+#v3 Apparently I had a wait after mkfifo that wasn't needed. 
+#v2 Temp files are a thing in /tmp! Wow, who knew? Also, trap is a thing for ensured cleanup? Nice. 
+#v1 Rudimentary first attempt with ""temp"" files in the same directory as the script, and an 0.1 wait.
+
 function cleanup()
 {
 	[[ -n $THE_TEMP_DIRECTORY ]] && [[ -d $THE_TEMP_DIRECTORY ]] && rm -r $THE_TEMP_DIRECTORY;
