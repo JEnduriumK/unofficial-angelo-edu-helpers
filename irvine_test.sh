@@ -39,14 +39,13 @@
 
 function cleanup()
 {
-	[[ -n $THE_TEMP_DIRECTORY ]] && rm -r $THE_TEMP_DIRECTORY;
+	[[ -n $THE_TEMP_DIRECTORY ]] && [[ -d $THE_TEMP_DIRECTORY ]] && rm -r $THE_TEMP_DIRECTORY;
 }
 
 THE_EXECUTABLE=""
 THE_TEXT=""
 THE_TEMP_DIRECTORY=$(mktemp -d)
 trap cleanup EXIT
-trap cleanup SIGINT
 
 #Did you hand us two arguments?
 [[ $# -eq 2 ]] || { echo "USAGE: $0 <executable> <input text>"; echo "OR     $0 <input text> <executable>"; exit; }
