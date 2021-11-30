@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 #By Joel King. Sorta. Nov 18th, 2021.
 ######################################################################
@@ -11,7 +11,7 @@
 #other people's scripts found online. 
 #
 #It was only tested on the Angelo State University CSUnix box
-#on or around November 17th, 2021. 
+#on or around November 28th, 2021. 
 #
 #It was only tested on stage1 of the compiler project.
 #
@@ -70,8 +70,8 @@
 #
 #Set COMPILERNAME to the name of your compiler program executable.
 #
-#COMPILERNAME=./stage0
-COMPILERNAME=./stage1
+COMPILERNAME=./stage0
+#COMPILERNAME=./stage1
 #COMPILERNAME=./stage2
 #
 #Set the ASM_NAME_STRING to contain the same string as your list of
@@ -91,20 +91,23 @@ COMPILERNAME=./stage1
 #
 #DEFAULT:
 #ASM_NAME_STRING=""
-ASM_NAME_STRING="Joel King and William Blazier"
+ASM_NAME_STRING=""
 #
 #Lines in your generated .asm files containing this text will 
 #not cause color changes in the output chart at the end.
 #
-#This prevents a diff that shows a difference like so:
+#Using:
+#ASM_NAME_STRING="Santa Claus and The Easter Bunny"
+#
+#Will prevent a diff that shows a difference like so:
 #1c1
 #< ; YOUR NAME(S)       Mon Oct 19 17:06:18 2020
 #---
 #> ; Santa Claus and The Easter Bunny Wed Nov 17 12:52:38 2021
+#from being flagged as a problem.
 #
 #
-#
-#By default will run something like...
+#By default this script will run something like...
 #> ./stage0 ./input/001.dat ./output/001.my.lst ./output/001.my.asm
 #
 #If you want everything to just be piled in to a single directory,
@@ -161,6 +164,11 @@ ASM_NAME_STRING="Joel King and William Blazier"
 ######################################################################
 #Config:
 #
+#Do you want it to show progress updates on a single line, rather than
+#scrolling your terminal a large amount? (true/false)
+FANCY_OUTPUT=true;
+#
+#
 #Directory containing the provided Pascallite .dat files.
 #Default:
 #PROVIDED_DATS=./input/
@@ -198,7 +206,7 @@ MY_EXES=./output/
 #of the .dat the executable came from, followed by either .in or 
 #.anythingYouLike.in. (so for 101.dat, 101.in, 101.a.in, 101.test2.in,
 #and 101.123456.in would be valid options. You can do multiple input files.
-MY_TEST_INPUTS=./test_input/
+MY_TEST_INPUTS=./input/
 #
 #Directory for the storage of files to diff against for test input results.
 #So if you have an input file (101.in) that you want run through an 
@@ -207,7 +215,7 @@ MY_TEST_INPUTS=./test_input/
 #Dr. Motl might provide.) Should be named the same name as the .in file,
 #but with .out instead of .in.  (101.aY73.in is what goes in to the 
 #executable. 101.aY73.out is what the output is compared to.)
-MY_TEST_CHECKS=./test_input/
+MY_TEST_CHECKS=./input/
 #
 #Directory for the storage of test output from your generated executables.
 #Will be compared against files stored in MY_TEST_CHECKS. 
@@ -261,6 +269,8 @@ MAGICPIPE_DELAY="0.05"
 #https://stackoverflow.com/questions/1521462/looping-through-the-content-of-a-file-in-bash
 #https://unix.stackexchange.com/questions/444946/how-can-we-run-a-command-stored-in-a-variable
 #https://stackoverflow.com/questions/11307257/is-there-a-bash-command-which-counts-files
+#Credit also to https://github.com/mloftis for pointing out trap and mktemp after I showed him the first version of this script.
+#And also using "#!/usr/bin/env bash" rather than "#!/usr/bin/bash"
 
 #Provided AS-IS, no warranties. I won't promise it won't delete your root structure.
 #USE AT YOUR OWN RISK
@@ -314,6 +324,12 @@ MAGICPIPE_DELAY="0.05"
 ######################################################################
 #CHANGELOG:
 #
+#v4: Temp-file usage for cleaner pipe creation.
+#    More informative output, possibly might work for people without
+#    color support on their terminal?
+#    Control the fancy output where it does/n't scroll endlessly.
+#    First steps towards input/output in to executables.
+#
 #v3: Configuration options added. Now you can have your files in 
 #    other directories!
 #
@@ -332,6 +348,27 @@ MAGICPIPE_DELAY="0.05"
 ######################################################################
 ######################################################################
 ######################################################################
+
+function cleanup()
+{
+	[[ -n $THE_TEMP_DIRECTORY ]] && [[ -d $THE_TEMP_DIRECTORY ]] && rm -r $THE_TEMP_DIRECTORY;
+}
+
+THE_TEMP_DIRECTORY=$(mktemp -d)
+trap cleanup EXIT
+#Did you know that...
+#/tmp is typically stored in RAM, not on disk, on Linux?
+#Which would make /tmp *very* fast...
+#And that trap works like a C signal handler?
+#And there's an entire command (mktemp) that revolves around creating
+#temporary files on /tmp for use by other programs!
+#Also, /tmp gets cleaned up every reboot, because it's on RAM!
+#So we can create all our temporary FIFO pipes in a /tmp directory,
+#do our best to clean all of it up,
+##even on a ^C##
+#but if we miss something, it'll just clutter /tmp for a little while
+#until reboot! Neat!
+
 
 RED=$'\e[0;31m'
 GREEN=$'\e[1;32m'
@@ -401,7 +438,7 @@ for i in "$PROVIDED_DATS"*.dat ; do
 	THENAME=$(basename "$i" .dat) #Lets just grab the name of the file, sans extension. 
 	#Lets show you that I'm doing something! And... what I'm doing, really.
 	echo $COMPILERNAME "$i" "$MY_LSTS""$THENAME""$LST_EXTEN" "$MY_ASMS""$THENAME""$ASM_EXTEN"
-	tput cuu1
+	if $FANCY_OUTPUT ; then  tput cuu1; fi
 	#sleep 0.02
 	#DO THE THING.
 	$COMPILERNAME "$i" "$MY_LSTS""$THENAME""$LST_EXTEN" "$MY_ASMS""$THENAME""$ASM_EXTEN"
@@ -423,14 +460,14 @@ for i in "$MY_LSTS"*"$LST_EXTEN" ; do
 	echo "" >> $ALL_OUTS #NEWLINE
 	[[ -f "$THENAME".lst ]] || continue
 	echo "Running $COMPILERNAME $THENAME listing file diff test"
-	tput cuu1
+	if $FANCY_OUTPUT ; then  tput cuu1; fi
 	#sleep 0.02
 	echo "$THENAME".lst diffs >> $ALL_DIFFS
 	diff -b "$PROVIDED_LSTS""$THENAME".lst "$MY_LSTS""$THENAME""$LST_EXTEN" >> $ALL_DIFFS
 	echo "------------------------------" >> $ALL_DIFFS
 	echo "" >> $ALL_DIFFS #NEWLINE
 done
-tput cud1
+if $FANCY_OUTPUT ; then  tput cud1; fi
 echo "Listing files generated and added to $ALL_OUTS, diffs produced and added to $ALL_DIFFS."
 for i in "$MY_ASMS"*"$ASM_EXTEN" ; do 
 	[[ -f "$i" ]] || continue
@@ -441,14 +478,14 @@ for i in "$MY_ASMS"*"$ASM_EXTEN" ; do
 	echo "" >> $ALL_OUTS #NEWLINE
 	[[ -f "$PROVIDED_ASMS""$THENAME".asm ]] || continue
 	echo "Running $COMPILERNAME $THENAME assembly file diff test"
-	tput cuu1
+	if $FANCY_OUTPUT ; then  tput cuu1; fi
 	#sleep 0.02
 	echo "$THENAME".asm diffs >> $ALL_DIFFS
 	diff -b "$PROVIDED_ASMS""$THENAME".asm "$MY_ASMS""$THENAME""$ASM_EXTEN" >> $ALL_DIFFS
 	echo "------------------------------" >> $ALL_DIFFS
 	echo "" >> $ALL_DIFFS #NEWLINE!!!
 done
-tput cud1
+if $FANCY_OUTPUT ; then tput cud1; fi
 echo "Assembly files generated and added to $ALL_OUTS, diffs produced and added to $ALL_DIFFS."
 
 #Lets loop through any old executable files from previous runs and DELETE THEM ALL!
@@ -470,71 +507,108 @@ for i in "$MY_ASMS"*"$ASM_EXTEN" ; do
 	else
 		echo "$i can (probably) not compile, so I won't try."
 	fi
-	tput cuu1
+	if $FANCY_OUTPUT ; then tput cuu1; fi
 	#sleep 0.02
 done
-tput cud1
+if $FANCY_OUTPUT ; then tput cud1; fi
 #Lets run through all the provided Pascallite files again. 
 #We're going to check for provided .lst and .asm files, and compare
 #your output to what was provided, if anything!
-printf '| %7s | %14s | %14s | %14s |\n' "The .dat" "Your .lst" "Your .asm" "Your executable"
-printf '%s\n' "----------------------------------------------------------------"
+printf '%s\n' "------------------------------------------------------------------"
+
+printf '| %7s | %16s | %14s | %12s |\n' "The .dat" ".lst diffs" ".asm diffs" "Your executable"
+printf '%s\n' "------------------------------------------------------------------"
+printf '| %8s | %16s | %14s | %15s |\n' " " "No Error = (.)" " " " "
+printf '| %8s | %16s | %14s | %15s |\n' " " "Has Error = (E)" " " " "
+printf '%s\n' "------------------------------------------------------------------"
 
 for i in "$PROVIDED_DATS"*.dat ; do 
 	[[ -f "$i" ]] || continue
 	THENAME=$(basename "$i" .dat)
 	FILEEXISTS="$CLEAR""$THENAME"
+	declare -i NO_ERRORS=$(grep "0 ERRORS" $MY_LSTS"$THENAME"$LST_EXTEN -c)
+	if [ "$NO_ERRORS" -eq 1 ]; then
+		ERROR_COUNT=".";
+	else
+		ERROR_COUNT="E";
+	fi
 	if [ -f "$PROVIDED_LSTS""$THENAME".lst ]; then
 		diff -b <(sed '/STAGE[0-9]:/d' "$PROVIDED_LSTS""$THENAME".lst) <(sed '/STAGE[0-9]:/d' "$MY_LSTS""$THENAME""$LST_EXTEN") > /dev/null
 		case $? in
-		0) LSTFILE="$GREEN"" $THENAME.lst $CLEAR";;  #Diff's clean!
-		1) LSTFILE="$YELLOW"" $THENAME.lst $CLEAR";; #Diff's not clean!
-		2) LSTFILE="$RED"" $THENAME.lst $CLEAR";;    #Diff... broke?
+		0) LSTFILE="$GREEN""CLN lst diff(""$ERROR_COUNT"")""$CLEAR";;  #Diff's clean!
+		1) LSTFILE="$YELLOW""Warn: lst!(""$ERROR_COUNT"")""$CLEAR";; #Diff's not clean!
+		2) LSTFILE="$RED""ERROR (lst)(""$ERROR_COUNT"")""$CLEAR";;    #Diff... broke?
 		esac
 	else
-		LSTFILE="$CYAN"" $THENAME.lst $CLEAR"
+		LSTFILE="$CYAN""Unknown (lst)(""$ERROR_COUNT"")""$CLEAR"
 	fi
 	if [ -f "$PROVIDED_ASMS""$THENAME".asm ]; then
 		diff -b <(sed '/; YOUR NAME(S)/d' "$PROVIDED_ASMS""$THENAME".asm ) <(sed "/; $ASM_NAME_STRING/d" "$MY_ASMS""$THENAME""$ASM_EXTEN") > /dev/null
 		case $? in
-			0) ASMFILE="$GREEN"" $THENAME.asm $CLEAR";;
-			1) ASMFILE="$YELLOW"" $THENAME.asm $CLEAR";;
-			2) ASMFILE="$RED"" $THENAME.asm $CLEAR";;
+			0) ASMFILE="$GREEN""CLN asm diff$CLEAR";;
+			1) ASMFILE="$YELLOW""Warn: asm!$CLEAR";;
+			2) ASMFILE="$RED""ERROR (asm)$CLEAR";;
 		esac
 	else
-		ASMFILE="$CYAN"" $THENAME.asm $CLEAR"
+		ASMFILE="$CYAN""Unknown (asm)$CLEAR"
 	fi
 	if [ -f "$PROVIDED_ASMS""$THENAME".asm ]; then
 		declare -i MIGHTCOMPILE=$(grep "Exit    {0}" "$PROVIDED_ASMS""$THENAME".asm -c)
 		if [ "$MIGHTCOMPILE" -ge 1 ]; then
 			if [ -f "$MY_EXES""$THENAME""$EXE_EXTEN" ]; then
-				EXEFILE="$GREEN"" EXE Present ""$CLEAR"
+				EXEFILE="$GREEN""Compiled (Good)""$CLEAR"
 			else
-				EXEFILE="$RED"" EXE Absent ""$CLEAR"
+				EXEFILE="$RED""Missing (Bad)""$CLEAR"
 			fi
 		else
 			if [ -f "$MY_EXES""$THENAME""$EXE_EXTEN" ]; then
-				EXEFILE="$RED"" EXE Present ""$CLEAR"
+				EXEFILE="$RED""Compiled (Bad)""$CLEAR"
 			else
-				EXEFILE="$GREEN"" EXE Absent ""$CLEAR"
+				EXEFILE="$GREEN""Missing (Good)""$CLEAR"
 			fi
 		fi
 	else
 		declare -i MIGHTCOMPILE=$(grep "Exit    {0}" "$MY_ASMS""$THENAME""$ASM_EXTEN" -c)
 		if [ "$MIGHTCOMPILE" -ge 1 ]; then
 			if [ -f "$MY_EXES""$THENAME""$EXE_EXTEN" ]; then
-				EXEFILE="$CYAN"" EXE Present ""$CLEAR"
+				EXEFILE="$CYAN""Compiled (?)""$CLEAR"
 			else
-				EXEFILE="$RED"" EXE Absent ""$CLEAR"
+				EXEFILE="$RED""Missing (!)""$CLEAR"
 			fi
 		else
 			if [ -f "$MY_EXES""$THENAME""$EXE_EXTEN" ]; then
-				EXEFILE="$RED"" EXE Present ""$CLEAR"
+				EXEFILE="$RED""Compiled (?!)""$CLEAR"
 			else
-				EXEFILE="$YELLOW"" EXE Absent ""$CLEAR"
+				EXEFILE="$YELLOW""Missing (?)""$CLEAR"
 			fi
 		fi
 	fi
 	printf '| %13s' "$FILEEXISTS"
-	printf '| %25s | %25s | %26s |\n' "$LSTFILE" "$ASMFILE" "$EXEFILE"
+	printf '| %27s | %25s | %26s |\n' "$LSTFILE" "$ASMFILE" "$EXEFILE"
+done
+
+for an_executable in "$MY_EXES"*"$EXE_EXTEN" ; do
+	[[ -f "$an_executable" ]] || continue #Lets not try to 'execute' on things that aren't officially FILES. Y'know, directories and such. Either it's a file, or we "continue" to the next loop in the cycle.
+	THENAME=$(basename "$an_executable" "$EXE_EXTEN") #Lets just grab the name of the file, sans extension, so we have something to determine what test goes with what executable. 
+	TEST_COUNT=$(ls -Uba1 "$MY_TEST_CHECKS"| grep -c "$THENAME".*\.in$) #Count how many tests you have for this executable. 
+	[[ $TEST_COUNT -gt 0 ]] || { continue; } #echo "Tests for $an_executable not found. Skipping.";
+	[[ -f "$MY_TEST_CHECKS""$THENAME".out ]] || { echo "$an_executable lacks test output to compare to. Will still generate ""$MY_EXES""$THENAME""*$TEST_OUTPUT_EXTEN files."; }
+	for a_test in """$MY_TEST_INPUTS""$THENAME"*.in ; do
+		TESTNAME=$(basename "$a_test" .in)
+		#Lets make a temporary file in /tmp/whatever_temporary_directory_we_made_at_the_start, we'll remove it after. 
+		THIS_MAGICAL_PIPE=$(mktemp -u "$THE_TEMP_DIRECTORY""/""$TESTNAME""$MAGICALPIPE_INDICATOR"".XXXXXXXX")
+		mkfifo "$THIS_MAGICAL_PIPE"
+		wait
+		( "$an_executable" < "$THIS_MAGICAL_PIPE" > "$MY_TEST_OUTPUTS""$TESTNAME""$TEST_OUTPUT_EXTEN" ) &
+		#wait #DO NOT DO THIS. DO NOT WAIT. THIS WILL BREAK THE SCRIPT.
+		(
+		while IFS="" read -r THE_LINE || [ -n "$THE_LINE" ]
+		do
+			echo "$THE_LINE"
+			sleep 0.01
+		done < "$a_test" #THE INPUT FILE CAME FROM... BEHIND!
+		) > "$THIS_MAGICAL_PIPE"
+		wait
+		rm "$THIS_MAGICAL_PIPE"
+	done
 done
