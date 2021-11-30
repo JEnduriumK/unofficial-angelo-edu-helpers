@@ -38,7 +38,6 @@
 #And also using "#!/usr/bin/env bash" rather than "#!/usr/bin/bash"
 
 #Changelog
-#v4 Hah! Sleep 0 works just as well as sleep 0.1.
 #v3 Apparently I had a wait after mkfifo that wasn't needed? 
 #v2 Temp files are a thing in /tmp! Wow, who knew? Also, trap is a thing for ensured cleanup? Nice. 
 #v1 Rudimentary first attempt with ""temp"" files in the same directory as the script, and an 0.1 wait.
@@ -47,11 +46,11 @@ function cleanup()
 {
 	[[ -n $THE_TEMP_DIRECTORY ]] && [[ -d $THE_TEMP_DIRECTORY ]] && rm -r $THE_TEMP_DIRECTORY;
 }
+THE_TEMP_DIRECTORY=$(mktemp -d)
+trap cleanup EXIT
 
 THE_EXECUTABLE=""
 THE_TEXT=""
-THE_TEMP_DIRECTORY=$(mktemp -d)
-trap cleanup EXIT
 
 #Did you hand us two arguments?
 [[ $# -eq 2 ]] || { echo "USAGE: $0 <executable> <input text>"; echo "OR     $0 <input text> <executable>"; exit; }
@@ -77,7 +76,7 @@ mkfifo "$THIS_MAGICAL_PIPE"
 	while IFS="" read -r THE_LINE || [ -n "$THE_LINE" ]
 	do
 		echo "$THE_LINE"
-		sleep 0
+		sleep 0.01
 	done < "$THE_TEXT" #THE INPUT FILE CAME FROM... BEHIND!
 	#Essentially: ( echo LINE1; sleep 0.01; echo LINE2; sleep 0.01; echo LINE3; sleep 0.01 ) > $THIS_MAGICAL_PIPE
 ) > "$THIS_MAGICAL_PIPE"
