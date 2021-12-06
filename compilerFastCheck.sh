@@ -166,7 +166,7 @@ ASM_NAME_STRING=""
 #
 #Do you want it to show progress updates on a single line, rather than
 #scrolling your terminal a large amount? (true/false)
-FANCY_OUTPUT=true;
+FANCY_OUTPUT=false;
 #
 #
 #Directory containing the provided Pascallite .dat files.
@@ -458,7 +458,7 @@ for i in "$MY_LSTS"*"$LST_EXTEN" ; do
 	echo "------------------------------" >> $ALL_OUTS
 	cat "$MY_LSTS""$THENAME""$LST_EXTEN" >> $ALL_OUTS
 	echo "" >> $ALL_OUTS #NEWLINE
-	[[ -f "$THENAME".lst ]] || continue
+	[[ -f "$PROVIDED_LSTS""$THENAME".lst ]] || continue
 	echo "Running $COMPILERNAME $THENAME listing file diff test"
 	if $FANCY_OUTPUT ; then  tput cuu1; fi
 	#sleep 0.02
@@ -590,10 +590,10 @@ done
 for an_executable in "$MY_EXES"*"$EXE_EXTEN" ; do
 	[[ -f "$an_executable" ]] || continue #Lets not try to 'execute' on things that aren't officially FILES. Y'know, directories and such. Either it's a file, or we "continue" to the next loop in the cycle.
 	THENAME=$(basename "$an_executable" "$EXE_EXTEN") #Lets just grab the name of the file, sans extension, so we have something to determine what test goes with what executable. 
-	TEST_COUNT=$(ls -Uba1 "$MY_TEST_CHECKS"| grep -c "$THENAME".*\.in$) #Count how many tests you have for this executable. 
+	TEST_COUNT=$(ls -Uba1 "$MY_TEST_INPUTS"| grep -c "$THENAME".*\.in$) #Count how many tests you have for this executable. 
 	[[ $TEST_COUNT -gt 0 ]] || { continue; } #echo "Tests for $an_executable not found. Skipping.";
-	[[ -f "$MY_TEST_CHECKS""$THENAME".out ]] || { echo "$an_executable lacks test output to compare to. Will still generate ""$MY_EXES""$THENAME""*$TEST_OUTPUT_EXTEN files."; }
-	for a_test in """$MY_TEST_INPUTS""$THENAME"*.in ; do
+	[[ -f "$MY_TEST_CHECKS""$TEST_NAME".out ]] || { echo "$an_executable lacks test output to compare to. Will still generate ""$MY_EXES""$THENAME""*$TEST_OUTPUT_EXTEN files."; }
+	for a_test in "$MY_TEST_INPUTS""$THENAME"*.in ; do
 		TESTNAME=$(basename "$a_test" .in)
 		#Lets make a temporary file in /tmp/whatever_temporary_directory_we_made_at_the_start, we'll remove it after. 
 		THIS_MAGICAL_PIPE=$(mktemp -u "$THE_TEMP_DIRECTORY""/""$TESTNAME""$MAGICALPIPE_INDICATOR"".XXXXXXXX")
