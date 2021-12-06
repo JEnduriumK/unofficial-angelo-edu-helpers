@@ -166,7 +166,7 @@ ASM_NAME_STRING=""
 #
 #Do you want it to show progress updates on a single line, rather than
 #scrolling your terminal a large amount? (true/false)
-FANCY_OUTPUT=false;
+FANCY_OUTPUT=true;
 #
 #
 #Directory containing the provided Pascallite .dat files.
