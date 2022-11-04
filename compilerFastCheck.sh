@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+#From https://github.com/JEnduriumK/unofficial-angelo-edu-helpers/blob/main/compilerFastCheck.sh
 #By Joel King. Sorta. Nov 18th, 2021.
 ######################################################################
 #WARNING:
