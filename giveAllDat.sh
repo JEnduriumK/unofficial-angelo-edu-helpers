@@ -22,4 +22,4 @@ for i in ./input/*.asm ; do
   cat "$i" >> allasm.txt
   echo "" >> allasm.txt
 done
-echo "All .dat files compiled in to allasm.txt"
+echo "All .asm files compiled in to allasm.txt"
